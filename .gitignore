@@ -1,0 +1,20 @@
+# Terraform
+infra/.terraform/
+infra/terraform.tfstate
+infra/terraform.tfstate.*
+infra/ssh_key.pem
+infra/ssh_key.pub
+infra/crash.log
+
+# Rust
+enclave/target/
+enclave/enclave.eif
+
+# Node / Bun
+client/node_modules/
+client/dist/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
