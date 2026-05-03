@@ -33,14 +33,14 @@ deploy:
       > /tmp/socat.log 2>&1 &'
 
 # Stop the enclave and the proxy. Leaves infra up.
+# Matching socat by process name (not -f) avoids the shell self-killing itself.
 stop:
-    just ssh 'nitro-cli terminate-enclave --all 2>/dev/null; \
-      pkill -f "socat TCP-LISTEN:{{ HOST_TCP_PORT }}" 2>/dev/null; \
-      true'
+    just ssh 'nitro-cli terminate-enclave --all 2>/dev/null; pkill -x socat 2>/dev/null; true'
 
-# SSH into the host. Pass extra args after, e.g. `just ssh 'docker ps'`.
-ssh *args:
-    ssh -i infra/ssh_key.pem -o StrictHostKeyChecking=accept-new ec2-user@$(just _ip) {{ args }}
+# SSH into the host. Pass a remote command, e.g. `just ssh 'docker ps'`.
+# With no args, opens an interactive shell.
+ssh *cmd:
+    ssh -i infra/ssh_key.pem -o StrictHostKeyChecking=accept-new ec2-user@$(just _ip) {{ if cmd == "" { "" } else { quote(cmd) } }}
 
 # Stream the enclave's stdout via nitro-cli console.
 logs:
