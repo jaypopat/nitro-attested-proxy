@@ -13,6 +13,7 @@ enclave/enclave.eif
 # Node / Bun
 client/node_modules/
 client/dist/
+client/attestation.cbor
 
 # Editor / OS
 .DS_Store

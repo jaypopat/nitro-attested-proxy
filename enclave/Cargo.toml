@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 vsock = "0.5"
+aws-nitro-enclaves-nsm-api = "0.5"
 
 [profile.release]
 strip = true
