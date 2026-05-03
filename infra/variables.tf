@@ -1,17 +1,17 @@
 variable "region" {
-  description = "AWS region. us-east-1 is cheapest; switch to eu-west-1/eu-west-2 for lower SSH latency from Europe."
+  description = "AWS region. eu-west-1 (Ireland)"
   type        = string
-  default     = "us-east-1"
+  default     = "eu-west-1"
 }
 
 variable "instance_type" {
-  description = "Must support Nitro Enclaves. m5.xlarge is the smallest sensible option."
+  description = "Must support Nitro Enclaves and have >= 4 vCPUs. c5.xlarge is the cheapest option that fits."
   type        = string
-  default     = "m5.xlarge"
+  default     = "c5.xlarge"
 }
 
 variable "allowed_cidr" {
-  description = "CIDR allowed to reach SSH (22) and the proxy (8000). Lock to <your-ip>/32 for anything beyond a short demo."
+  description = "CIDR allowed to reach SSH (22) and the proxy (8000). Change later perhaps"
   type        = string
   default     = "0.0.0.0/0"
 }

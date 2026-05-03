@@ -16,7 +16,7 @@ resource "aws_security_group" "this" {
   }
 
   ingress {
-    description = "TCP -> vsock proxy bridge"
+    description = "Inbound TCP for socat vsock bridge"
     from_port   = 8000
     to_port     = 8000
     protocol    = "tcp"
