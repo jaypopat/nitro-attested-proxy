@@ -21,7 +21,7 @@ deploy:
     rsync -av --exclude target --delete \
       -e "ssh -i infra/ssh_key.pem -o StrictHostKeyChecking=accept-new" \
       ./enclave/ ec2-user@$(just _ip):~/enclave/
-    just ssh 'cd ~/enclave && docker build -t enclave-app . && nitro-cli build-enclave --docker-uri enclave-app:latest --output-file enclave.eif'
+    just ssh 'cd ~/enclave && (docker build -t enclave-app . && nitro-cli build-enclave --docker-uri enclave-app:latest --output-file enclave.eif) >&2 && nitro-cli describe-eif --eif-path ~/enclave/enclave.eif | jq .Measurements' > client/verify/pinned-pcrs.json
     just ssh 'nitro-cli run-enclave \
       --cpu-count 2 \
       --memory 512 \
@@ -33,11 +33,13 @@ deploy:
       > /tmp/socat.log 2>&1 &'
 
 # Stop the enclave and the proxy. Leaves infra up.
+
 # Matching socat by process name (not -f) avoids the shell self-killing itself.
 stop:
     just ssh 'nitro-cli terminate-enclave --all 2>/dev/null; pkill -x socat 2>/dev/null; true'
 
 # SSH into the host. Pass a remote command, e.g. `just ssh 'docker ps'`.
+
 # With no args, opens an interactive shell.
 ssh *cmd:
     ssh -i infra/ssh_key.pem -o StrictHostKeyChecking=accept-new ec2-user@$(just _ip) {{ if cmd == "" { "" } else { quote(cmd) } }}
@@ -49,6 +51,22 @@ logs:
 # Run the TS client against the live host.
 client *args:
     cd client && bun run index.ts --host $(just _ip) --port {{ HOST_TCP_PORT }} {{ args }}
+
+# Format both sides.
+fmt:
+    cd enclave && cargo fmt
+    cd client && bun run lint:fix
+
+# Lint both sides — fmt check + clippy + biome. Fails on warnings.
+lint:
+    cd enclave && cargo fmt --check
+    cd enclave && cargo clippy --all-targets -- -D warnings
+    cd client && bun run lint
+
+# Run tests on both sides.
+test:
+    cd enclave && cargo test
+    cd client && bun test
 
 # Private: read the EC2 public IP from tofu state.
 _ip:

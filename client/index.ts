@@ -1,7 +1,8 @@
+import { parseArgs } from "node:util";
 import { connect } from "bun";
-import { parseArgs } from "util";
+import { verifyAttestation } from "./verify";
 
-type Mode = "echo" | "attest";
+type Mode = ["echo", "attest"][number];
 
 const { values } = parseArgs({
 	args: Bun.argv.slice(2),
@@ -25,26 +26,28 @@ if (values.mode !== "echo" && values.mode !== "attest") {
 	process.exit(1);
 }
 
-const port = Number.parseInt(values.port!, 10);
+const port = parseInt(values.port, 10);
 const mode: Mode = values.mode;
-const message = values.message!;
+const message = values.message;
+const nonce = crypto.getRandomValues(new Uint8Array(32));
 
-console.log(`connecting to ${values.host}:${port} in ${mode} mode...`);
+console.log(`${mode} ${values.host}:${port}`);
 
 const chunks: Uint8Array[] = [];
 const { promise: closed, resolve, reject } = Promise.withResolvers<void>();
 
-const timeout = setTimeout(
-	() => reject(new Error("timeout: no response within 5s")),
-	5000,
-);
+const timeout = setTimeout(() => reject(new Error("timeout 5s")), 5000);
 
 await connect({
 	hostname: values.host,
 	port,
 	socket: {
 		open(socket) {
-			socket.write(mode === "echo" ? `ECHO\n${message}` : "ATTEST\n");
+			if (mode === "echo") {
+				socket.write(`ECHO\n${message}`);
+			} else {
+				socket.write(`ATTEST ${Buffer.from(nonce).toString("hex")}\n`);
+			}
 		},
 		data(socket, data) {
 			chunks.push(new Uint8Array(data));
@@ -71,12 +74,17 @@ try {
 const flat = Buffer.concat(chunks);
 
 if (mode === "echo") {
-	console.log(
-		`received ${flat.length} bytes: ${JSON.stringify(flat.toString("utf8"))}`,
-	);
+	console.log(`recv ${flat.length}b: ${JSON.stringify(flat.toString("utf8"))}`);
 } else {
 	await Bun.write("attestation.cbor", flat);
-	console.log(
-		`received ${flat.length}-byte attestation document, saved to client/attestation.cbor`,
-	);
+	console.log(`recv ${flat.length}b → client/attestation.cbor`);
+	try {
+		const doc = verifyAttestation(new Uint8Array(flat), nonce);
+		const pcr0 = doc.pcrs.get(0);
+		const pcr0Hex = pcr0 ? Buffer.from(pcr0).toString("hex").slice(0, 16) : "?";
+		console.log(`verified ${doc.module_id} pcr0=${pcr0Hex}…`);
+	} catch (err) {
+		console.error("verify failed:", (err as Error).message);
+		process.exit(1);
+	}
 }

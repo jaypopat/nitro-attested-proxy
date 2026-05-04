@@ -45,6 +45,7 @@ name = "enclave"
 version = "0.1.0"
 dependencies = [
  "aws-nitro-enclaves-nsm-api",
+ "serde_bytes",
  "vsock",
 ]
 

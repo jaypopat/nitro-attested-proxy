@@ -2,8 +2,9 @@ use std::io::Write;
 
 use aws_nitro_enclaves_nsm_api::api::{Request, Response};
 use aws_nitro_enclaves_nsm_api::driver::{nsm_exit, nsm_init, nsm_process_request};
+use serde_bytes::ByteBuf;
 
-pub fn attest<W: Write>(writer: &mut W) -> std::io::Result<()> {
+pub fn attest<W: Write>(writer: &mut W, nonce: Vec<u8>) -> std::io::Result<()> {
     let fd = nsm_init();
     if fd < 0 {
         eprintln!("enclave: failed to open /dev/nsm (fd={fd})");
@@ -13,7 +14,7 @@ pub fn attest<W: Write>(writer: &mut W) -> std::io::Result<()> {
 
     let request = Request::Attestation {
         user_data: None,
-        nonce: None,
+        nonce: Some(ByteBuf::from(nonce)),
         public_key: None,
     };
     let response = nsm_process_request(fd, request);
