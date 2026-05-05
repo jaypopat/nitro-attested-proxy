@@ -23,6 +23,8 @@ export function buildChain(doc: AttestationDoc): Chain {
 	return [leaf, ...intermediates];
 }
 
+// We check signatures, validity windows, and that the terminal cert matches  the pinned root by fingerprint — nothing else. No basicConstraints/keyUsage
+// policy checks, since AWS controls every cert in the chain
 export function verifyChain(
 	chain: Chain,
 	root: X509Certificate,

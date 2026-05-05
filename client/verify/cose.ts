@@ -33,7 +33,12 @@ export type Cose = {
 };
 
 export function parseCose(cbor: Uint8Array): Cose {
-	const outer = decode<unknown>(cbor, { preferMap: true });
+	let outer: unknown;
+	try {
+		outer = decode<unknown>(cbor, { preferMap: true });
+	} catch (err) {
+		throw new Error(`parse: COSE_Sign1 cbor: ${(err as Error).message}`);
+	}
 	const arr = outer instanceof Tag ? outer.contents : outer;
 	const r = CoseSign1Schema.safeParse(arr);
 	if (!r.success) {
@@ -47,7 +52,12 @@ export function parseCose(cbor: Uint8Array): Cose {
 }
 
 export function parseDoc(payloadBytes: Uint8Array): AttestationDoc {
-	const m = decode<Map<string, unknown>>(payloadBytes, { preferMap: true });
+	let m: Map<string, unknown>;
+	try {
+		m = decode<Map<string, unknown>>(payloadBytes, { preferMap: true });
+	} catch (err) {
+		throw new Error(`parse: AttestationDoc cbor: ${(err as Error).message}`);
+	}
 	const r = AttestationDocSchema.safeParse(Object.fromEntries(m));
 	if (!r.success) {
 		const i = r.error.issues[0];

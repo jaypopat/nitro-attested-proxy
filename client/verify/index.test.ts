@@ -57,7 +57,9 @@ describe("verifyAttestation against committed debug-mode fixture", () => {
 
 	test("rejects truncated cbor (parse failure)", () => {
 		const truncated = FIXTURE.slice(0, 10);
-		expect(() => verifyAttestation(truncated, undefined, allSkip)).toThrow();
+		expect(() => verifyAttestation(truncated, undefined, allSkip)).toThrow(
+			/^parse:/,
+		);
 	});
 
 	test("rejects stale timestamp when not skipped", () => {

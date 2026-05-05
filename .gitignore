@@ -21,3 +21,4 @@ client/attestation.cbor
 .vscode/
 
 CLAUDE.md
+/docs
