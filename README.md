@@ -1,4 +1,4 @@
-# attested-proxy
+# Nitro Attested Proxy
 
 End-to-end **remote attestation** against AWS Nitro Enclaves: a TypeScript client refuses to encrypt anything until it has cryptographic proof of the exact code running on the enclave's hardware. From that moment on, the EC2 host operator — even with `root` — sees only ciphertext.
 
