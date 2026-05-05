@@ -4,6 +4,10 @@ End-to-end **remote attestation** against AWS Nitro Enclaves: a TypeScript clien
 
 > Rust · Bun + TypeScript · AWS Nitro Enclaves · OpenTofu · HPKE · COSE_Sign1 · X25519 · AES-256-GCM · vsock · rustls
 
+<p align="center">
+  <img src="diagrams/trust-model.svg" alt="Trust model: client and enclave are trusted; the EC2 host around the enclave is not" width="720">
+</p>
+
 ### Using the SDK
 
 ```ts
@@ -50,6 +54,33 @@ The enclave decrypted the payload inside isolated memory, opened a TLS session *
 - A malicious host running the outbound proxy cannot redirect the upstream TLS session — the enclave validates the cert chain against a compile-time SNI, covered by PCR0.
 
 ### How it works
+
+```mermaid
+sequenceDiagram
+    participant C as Client (TS)
+    participant P as EC2 parent (socat + vsock-proxy)
+    participant E as Enclave (Rust)
+    participant U as httpbin.org
+
+    Note over C,E: Phase 1 — attest
+    C->>P: nonce (TCP)
+    P->>E: forwards (vsock)
+    E->>P: COSE_Sign1 doc (vsock)
+    P->>C: forwards (TCP)
+    Note over C: verifies chain, pins PCR0,<br/>extracts enclave pubkey
+
+    Note over C,E: Phase 2 — sealed send
+    C->>P: HPKE-sealed payload (TCP)
+    P->>E: forwards (vsock — ciphertext)
+    Note over E: HPKE-decrypts inside enclave RAM
+    E->>P: TLS handshake → upstream (vsock)
+    P->>U: forwards as TCP+TLS
+    U->>P: TLS response
+    P->>E: forwards (vsock — TLS bytes)
+    Note over E: AEAD-seals response<br/>under HPKE-exported key
+    E->>P: sealed response (vsock)
+    P->>C: forwards (TCP)
+```
 
 1. Enclave generates an X25519 keypair on startup. The private key never leaves enclave memory.
 2. Enclave asks `/dev/nsm` for a `COSE_Sign1` attestation document binding `(PCR0, public_key, hardware identity)`. The NSM signs with a per-instance key chained to the AWS Nitro root.

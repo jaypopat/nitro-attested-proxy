@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420" font-family="Virgil, 'Comic Sans MS', sans-serif">
+  <!-- Client device (trusted) -->
+  <rect x="30" y="80" width="220" height="220" rx="8"
+        fill="#d4f4dd" stroke="#2d7a3e" stroke-width="2"/>
+  <text x="140" y="115" text-anchor="middle" font-size="18" font-weight="bold">Client device (TS)</text>
+  <text x="140" y="170" text-anchor="middle" font-size="32">🔓</text>
+  <text x="140" y="200" text-anchor="middle" font-size="16" font-weight="bold" fill="#2d7a3e">TRUSTED</text>
+  <text x="140" y="240" text-anchor="middle" font-size="13">holds card,</text>
+  <text x="140" y="258" text-anchor="middle" font-size="13">verifies attestation,</text>
+  <text x="140" y="276" text-anchor="middle" font-size="13">HPKE-seals payload</text>
+
+  <!-- EC2 host (untrusted, contains enclave) -->
+  <rect x="320" y="40" width="450" height="340" rx="8"
+        fill="#fde4e4" stroke="#a83232" stroke-width="2"/>
+  <text x="545" y="70" text-anchor="middle" font-size="18" font-weight="bold">EC2 host</text>
+
+  <!-- Nitro Enclave (trusted, nested inside EC2) -->
+  <rect x="360" y="100" width="370" height="180" rx="8"
+        fill="#d4f4dd" stroke="#2d7a3e" stroke-width="2"/>
+  <text x="545" y="130" text-anchor="middle" font-size="17" font-weight="bold">Nitro Enclave (Rust)</text>
+  <text x="545" y="170" text-anchor="middle" font-size="32">🔓</text>
+  <text x="545" y="200" text-anchor="middle" font-size="16" font-weight="bold" fill="#2d7a3e">TRUSTED</text>
+  <text x="545" y="230" text-anchor="middle" font-size="13">holds X25519 keypair,</text>
+  <text x="545" y="248" text-anchor="middle" font-size="13">decrypts + processes</text>
+  <text x="545" y="266" text-anchor="middle" font-size="13">inside isolated memory</text>
+
+  <!-- Untrusted region label inside EC2, below enclave -->
+  <text x="545" y="315" text-anchor="middle" font-size="22">🔒</text>
+  <text x="545" y="340" text-anchor="middle" font-size="15" font-weight="bold" fill="#a83232">UNTRUSTED</text>
+  <text x="545" y="360" text-anchor="middle" font-size="12">root, AWS console, ops, socat + vsock-proxy — sees only ciphertext</text>
+</svg>
